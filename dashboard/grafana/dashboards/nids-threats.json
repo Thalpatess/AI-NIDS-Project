@@ -1,0 +1,15 @@
+{
+  "dashboard": {
+    "title": "AI NIDS - Threat Detection & Response",
+    "panels": [
+      {"id": 1, "type": "stat", "title": "Total Alerts (24h)", "targets": [{"expr": "increase(nids_alerts_generated_total[24h])"}]},
+      {"id": 2, "type": "stat", "title": "Critical Severity", "targets": [{"expr": "increase(nids_alerts_generated_total{severity=\"critical\"}[24h])"}]},
+      {"id": 3, "type": "timeseries", "title": "Alert Rate Over Time", "targets": [{"expr": "rate(nids_alerts_generated_total[5m])"}]},
+      {"id": 4, "type": "piechart", "title": "Alerts by Classification", "targets": [{"expr": "sum by(alert_type) (increase(nids_alerts_generated_total[24h]))"}]},
+      {"id": 5, "type": "histogram", "title": "Anomaly Score Distribution", "targets": [{"expr": "nids_anomaly_score"}]},
+      {"id": 6, "type": "timeseries", "title": "Packet Throughput", "targets": [{"expr": "rate(nids_packets_seen_total[5m])"}]},
+      {"id": 7, "type": "gauge", "title": "Active Flows", "targets": [{"expr": "nids_active_flows"}]},
+      {"id": 8, "type": "table", "title": "Top Threat Sources (24h)", "targets": [{"expr": "topk(10, sum by(src_ip) (increase(nids_alerts_generated_total[24h])))"}]}
+    ]
+  }
+}
