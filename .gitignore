@@ -1,0 +1,39 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Go build artifacts
+bin/
+*.exe
+*.out
+*.test
+
+# Model artifacts
+*.joblib
+*.pkl
+*.h5
+*.onnx
+
+# Local data
+*.csv
+*.parquet
+*.jsonl
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Docker artifacts
+.env
