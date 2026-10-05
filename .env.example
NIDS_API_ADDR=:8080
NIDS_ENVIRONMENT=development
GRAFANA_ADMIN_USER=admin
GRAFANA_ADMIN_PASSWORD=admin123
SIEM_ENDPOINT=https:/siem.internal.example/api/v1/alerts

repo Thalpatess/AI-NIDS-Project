@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+import csv
+import random
+from pathlib import Path
+
+DATA_PATH = Path(__file__).resolve().parent / "data" / "network_flows.csv"
+
+
+def generate_sample() -> None:
+    path = DATA_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    header = [
+        "flow_duration",
+        "packet_rate",
+        "byte_rate",
+        "packet_count",
+        "fwd_payload_entropy",
+        "bwd_payload_entropy",
+        "tcp_syn_count",
+        "tcp_ack_count",
+        "tcp_rst_count",
+        "tcp_fin_count",
+        "idle_max",
+        "inter_arrival_mean",
+        "flow_size",
+        "label",
+    ]
+    rows.append(header)
+
+    for i in range(80):
+        benign = i % 3 != 0
+        if benign:
+            flow_duration = round(random.uniform(0.08, 0.3), 3)
+            packet_rate = round(random.uniform(14, 22), 2)
+            byte_rate = round(random.uniform(8000, 20000), 0)
+            packet_count = random.randint(8, 22)
+            fwd_entropy = round(random.uniform(3.2, 4.8), 2)
+            bwd_entropy = round(random.uniform(3.1, 4.7), 2)
+            syn = random.randint(0, 2)
+            ack = random.randint(8, 22)
+            rst = 0
+            fin = 0
+            idle = round(random.uniform(0.02, 0.08), 3)
+            iat = round(random.uniform(0.009, 0.014), 3)
+            flow_size = random.randint(900, 2200)
+            label = "benign"
+        else:
+            flow_duration = round(random.uniform(0.25, 0.55), 3)
+            packet_rate = round(random.uniform(25, 50), 2)
+            byte_rate = round(random.uniform(18000, 36000), 0)
+            packet_count = random.randint(20, 40)
+            fwd_entropy = round(random.uniform(7.0, 9.4), 2)
+            bwd_entropy = round(random.uniform(6.5, 8.6), 2)
+            syn = random.randint(10, 20)
+            ack = random.randint(8, 18)
+            rst = random.randint(0, 3)
+            fin = random.randint(0, 1)
+            idle = round(random.uniform(0.02, 0.07), 3)
+            iat = round(random.uniform(0.011, 0.014), 3)
+            flow_size = random.randint(2200, 3600)
+            label = "malicious"
+
+        rows.append([
+            flow_duration,
+            packet_rate,
+            byte_rate,
+            packet_count,
+            fwd_entropy,
+            bwd_entropy,
+            syn,
+            ack,
+            rst,
+            fin,
+            idle,
+            iat,
+            flow_size,
+            label,
+        ])
+
+    with DATA_PATH.open("w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(rows)
+
+    print(f"Demo dataset generated at {DATA_PATH}")
+
+
+if __name__ == "__main__":
+    generate_sample()

@@ -1,0 +1,111 @@
+package api
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "sync"
+    "time"
+)
+
+type Alert struct {
+    ID        string    `json:"id"`
+    Type      string    `json:"type"`
+    Severity  string    `json:"severity"`
+    Score     float64   `json:"score"`
+    Message   string    `json:"message"`
+    FlowID    string    `json:"flow_id"`
+    CreatedAt time.Time `json:"created_at"`
+}
+
+type Server struct {
+    mu     sync.RWMutex
+    alerts []Alert
+}
+
+func NewServer() *Server {
+    s := &Server{}
+    s.alerts = []Alert{
+        {
+            ID:        "alert-001",
+            Type:      "anomaly",
+            Severity: "high",
+            Score:     91.6,
+            Message:   "Port scan pattern detected",
+            FlowID:    "10.0.0.5:443->10.0.0.8:43000",
+            CreatedAt: time.Now().UTC().Add(-2 * time.Minute),
+        },
+        {
+            ID:        "alert-002",
+            Type:      "data_exfiltration",
+            Severity: "critical",
+            Score:     96.1,
+            Message:   "High-volume outbound transfer exceeds historical baseline",
+            FlowID:    "10.0.0.10:80->203.0.113.7:443",
+            CreatedAt: time.Now().UTC().Add(-5 * time.Minute),
+        },
+    }
+    return s
+}
+
+func (s *Server) RegisterRoutes(mux *http.ServeMux) {
+    mux.HandleFunc("/health", s.handleHealth)
+    mux.HandleFunc("/api/alerts", s.handleAlerts)
+    mux.HandleFunc("/api/summary", s.handleSummary)
+}
+
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "service": "nids-api"})
+}
+
+func (s *Server) handleAlerts(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    _ = json.NewEncoder(w).Encode(s.alerts)
+}
+
+func (s *Server) handleSummary(w http.ResponseWriter, r *http.Request) {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+
+    total := len(s.alerts)
+    critical := 0
+    high := 0
+    for _, a := range s.alerts {
+        switch a.Severity {
+        case "critical":
+            critical++
+        case "high":
+            high++
+        }
+    }
+
+    summary := map[string]interface{}{
+        "total_alerts": total,
+        "critical": critical,
+        "high": high,
+        "last_updated": time.Now().UTC().Format(time.RFC3339),
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    _ = json.NewEncoder(w).Encode(summary)
+}
+
+func (s *Server) AddAlert(alert Alert) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    s.alerts = append([]Alert{alert}, s.alerts...)
+    if len(s.alerts) > 25 {
+        s.alerts = s.alerts[:25]
+    }
+}
+
+func StartServer(addr string) error {
+    mux := http.NewServeMux()
+    srv := NewServer()
+    srv.RegisterRoutes(mux)
+    fmt.Printf("Starting NIDS API on %s\n", addr)
+    return http.ListenAndServe(addr, mux)
+}

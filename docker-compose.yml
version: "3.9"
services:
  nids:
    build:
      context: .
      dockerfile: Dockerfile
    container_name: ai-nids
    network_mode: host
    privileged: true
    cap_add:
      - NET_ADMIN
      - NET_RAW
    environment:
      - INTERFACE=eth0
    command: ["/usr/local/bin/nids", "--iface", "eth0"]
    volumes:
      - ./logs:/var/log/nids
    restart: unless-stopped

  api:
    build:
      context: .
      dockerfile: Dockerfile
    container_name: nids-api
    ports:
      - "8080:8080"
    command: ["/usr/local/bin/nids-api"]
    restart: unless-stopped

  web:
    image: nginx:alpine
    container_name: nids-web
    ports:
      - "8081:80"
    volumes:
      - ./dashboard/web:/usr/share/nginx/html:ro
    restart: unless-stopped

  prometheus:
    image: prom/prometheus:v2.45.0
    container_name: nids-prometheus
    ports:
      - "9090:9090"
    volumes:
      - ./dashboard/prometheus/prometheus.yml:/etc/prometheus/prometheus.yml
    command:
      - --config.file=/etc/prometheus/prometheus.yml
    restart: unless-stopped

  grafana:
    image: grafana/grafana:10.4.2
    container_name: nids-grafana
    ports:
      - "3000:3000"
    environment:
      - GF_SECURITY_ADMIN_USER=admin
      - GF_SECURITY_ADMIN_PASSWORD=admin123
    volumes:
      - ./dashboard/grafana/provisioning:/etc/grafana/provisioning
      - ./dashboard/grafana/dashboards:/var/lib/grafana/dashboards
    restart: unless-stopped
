@@ -1,0 +1,113 @@
+# AI-NIDS-Project
+
+An enterprise-ready AI-powered Network Intrusion Detection System (NIDS) prototype built with:
+- Go for high-performance packet capture and flow analysis
+- Python for ML feature engineering and anomaly scoring
+- Prometheus + Grafana for real-time monitoring and dashboarding
+- REST API and web dashboard for alert visualization
+- Docker Compose for local deployment
+
+The project demonstrates an end-to-end architecture for passive network traffic inspection using SPAN/mirror traffic, flow telemetry, AI-assisted anomaly scoring, and dashboard-based SOC monitoring.
+
+## Architecture overview
+
+```text
+Production traffic
+       │
+       ▼
+[Core switch / SPAN port]
+       │
+       ▼
+[Go capture agent]
+       │  packet + flow metrics
+       ▼
+[ML scoring service]
+       │  anomaly score + alert decisions
+       ▼
+[REST API]
+       │
+       ├── Grafana dashboard
+       ├── Web dashboard
+       └── SIEM / alert log integration
+```
+
+## Features
+- Passive packet capture from a mirrored interface
+- Flow-level telemetry aggregation
+- Protocol and payload feature extraction
+- AI anomaly scoring with ML service
+- REST API for alert and summary retrieval
+- Web dashboard for SOC-style monitoring
+- Prometheus + Grafana telemetry export
+- Dockerized deployment
+
+## Project structure
+- `cmd/nids` — capture service entrypoint
+- `cmd/api` — lightweight alert/summary API service
+- `internal/api` — REST API logic and alert store
+- `python` — ML training and attack simulation utilities
+- `dashboard` — Prometheus, Grafana, and web dashboard files
+- `docker-compose.yml` — local stack bootstrapping
+
+## Quick start
+
+### 1. Start the full stack
+
+```bash
+docker compose up --build
+```
+
+### 2. Access the dashboards
+- Grafana: http://localhost:3000
+- Web UI: http://localhost:8081
+- Prometheus: http://localhost:9090
+- API: http://localhost:8080/health
+
+### 3. Train the model
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r python/requirements.txt
+python python/train_model.py
+```
+
+### 4. Run the packet capture service directly
+
+```bash
+go run ./cmd/nids --iface eth0
+```
+
+### 5. Run the API service directly
+
+```bash
+go run ./cmd/api
+```
+
+## Example alert payload
+
+```json
+{
+  "id": "alert-1234",
+  "type": "anomaly",
+  "severity": "high",
+  "score": 91.6,
+  "message": "Port scan pattern detected",
+  "flow_id": "10.0.0.5:443->10.0.0.8:43000",
+  "created_at": "2026-10-05T17:00:00Z"
+}
+```
+
+## Notes
+- For production deployment, mirror traffic should be received on a dedicated interface with no egress capability.
+- The NIDS appliance should be deployed on an isolated management network and hardened per enterprise security standards.
+- This repository is a reference implementation and should be adapted to your environment.
+
+## Security expectations
+- Interface should be receive-only
+- No IP forwarding
+- No routing between management and production networks
+- Restrict egress to SIEM and monitoring endpoints only
+
+## License
+This project is provided for educational and enterprise prototyping purposes.

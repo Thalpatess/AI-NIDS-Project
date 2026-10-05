@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI NIDS Dashboard</title>
+    <style>
+      body {
+        margin: 0;
+        background: #0b1220;
+        color: #e5eefb;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #23314d;
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .kpi {
+        background: #111b2d;
+        border: 1px solid #23314d;
+        border-radius: 10px;
+        padding: 20px;
+      }
+      .kpi h3 {
+        margin: 0 0 8px;
+        font-size: 0.85rem;
+        color: #9fb3d1;
+      }
+      .kpi .value {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 16px;
+      }
+      .panel {
+        background: #111b2d;
+        border: 1px solid #23314d;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #23314d;
+        text-align: left;
+      }
+      th {
+        color: #9fb3d1;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: bold;
+      }
+      .critical { background: rgba(255, 71, 87, 0.2); color: #ff7c85; }
+      .high { background: rgba(255, 176, 0, 0.2); color: #ffd166; }
+      .normal { background: rgba(0, 204, 153, 0.2); color: #7ef7d3; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>AI NIDS Command Center</h1>
+        <div id="status">Loading...</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <h3>Total alerts</h3>
+          <div class="value" id="totalAlerts">0</div>
+        </div>
+        <div class="kpi">
+          <h3>Critical</h3>
+          <div class="value" id="criticalAlerts">0</div>
+        </div>
+        <div class="kpi">
+          <h3>High</h3>
+          <div class="value" id="highAlerts">0</div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="panel">
+          <h2>Recent alerts</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Flow</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="alertRows"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>Threat posture</h2>
+          <div style="margin-top: 18px;">
+            <p><strong>Monitoring mode:</strong> Passive</p>
+            <p><strong>Interface:</strong> SPAN / mirrored traffic</p>
+            <p><strong>Detection:</strong> AI anomaly scoring</p>
+            <p><strong>Responder:</strong> SOC + SIEM integration</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function loadSummary() {
+        try {
+          const summaryResponse = await fetch('/api/summary');
+          const summary = await summaryResponse.json();
+          const alertsResponse = await fetch('/api/alerts');
+          const alerts = await alertsResponse.json();
+
+          document.getElementById('totalAlerts').textContent = summary.total_alerts || 0;
+          document.getElementById('criticalAlerts').textContent = summary.critical || 0;
+          document.getElementById('highAlerts').textContent = summary.high || 0;
+          document.getElementById('status').textContent = 'System online';
+
+          const rows = document.getElementById('alertRows');
+          rows.innerHTML = '';
+
+          alerts.forEach((alert) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><span class="badge ${alert.severity}">${alert.severity}</span></td>
+              <td>${alert.type}</td>
+              <td>${Number(alert.score).toFixed(1)}</td>
+              <td>${alert.flow_id}</td>
+              <td>${new Date(alert.created_at).toLocaleString()}</td>
+            `;
+            rows.appendChild(row);
+          });
+        } catch (err) {
+          document.getElementById('status').textContent = 'API unavailable';
+          console.error(err);
+        }
+      }
+
+      loadSummary();
+      setInterval(loadSummary, 10000);
+    </script>
+  </body>
+</html>
