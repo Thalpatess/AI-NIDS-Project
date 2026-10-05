@@ -8,6 +8,24 @@ An enterprise-ready AI-powered Network Intrusion Detection System (NIDS) prototy
 
 The project is designed to demonstrate an end-to-end architecture for passive network traffic inspection using SPAN/mirror traffic, feature extraction, and AI-assisted anomaly detection.
 
+## About the project
+
+AI-NIDS-Project is a security-focused prototype designed to showcase how mirrored network traffic can be ingested, analyzed, and scored in real time for anomalous behavior. The system is intentionally built around the enterprise pattern of a passive monitoring architecture:
+
+- Production traffic is mirrored through a switch SPAN port
+- A dedicated appliance receives the copy without participating in routing
+- Packet and flow telemetry are extracted for behavioral analysis
+- ML models rank suspicious sessions or connections against learned baselines
+- Detection outcomes are exposed through Prometheus metrics and Grafana dashboards
+- Security alerts are formatted for downstream SIEM or SOC workflows
+
+This repository is meant to be a practical reference for:
+- passive network monitoring in enterprise networks
+- anomaly-based IDS development
+- flow intelligence and detection feature engineering
+- alerting pipelines for SOC operations
+- operational visualization of NIDS telemetry
+
 ## Features
 - Passive packet capture from a mirrored interface
 - Flow-level telemetry aggregation
